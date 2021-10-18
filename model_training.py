@@ -1,64 +1,51 @@
-import argparse
 import json
 import os
+import io
+import sys
 import spacy
 import random
 from spacy.util import minibatch, compounding
+import warnings
 
 
 
-def main():
+warnings.filterwarnings("ignore", message=r"\[W033\]", category=UserWarning)
 
-    parser = argparse.ArgumentParser(description='A program for creation and training NER model')
+input_stream = io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8')
 
-    parser.add_argument("--model_name", help="Specify model name")
-    parser.add_argument("--data_string", help="JSON string with training data")
-    parser.add_argument("--data_json", help="JSON file with training data")
 
-    args = parser.parse_args()    
-    
-    model_name = args.model_name
-    
-    if args.data_string and not args.data_json:
-        train_data = json.loads(args.data_string)        
-    else:
-        with open(args.data_json, 'r', encoding='utf') as f:
-            train_data = json.loads(f.read())
-                  
-    
-    for sentence in train_data.keys():
-        print(f'Train sample: \n\t{sentence}')
-        print('Entities:')
-        for entity in train_data[sentence]['entities']:
-            print(f'\t{sentence[entity[0]:entity[1]]}, type = {entity[2]}')
-        print()
+def main(input_json):
+
+    output_json = input_json.copy()
         
-    if model_name in os.listdir('.'):
-        nlp = spacy.load(f'./{model_name}')
-        print(f'Model {model_name} loaded\n')
+    model_name = input_json['model']['name']
+    model_lang = input_json['model']['locale']
+                          
+        
+    if f'{model_name}_{model_lang}' in os.listdir('.'):
+        nlp = spacy.load(f'./{model_name}_{model_lang}')
     else:
-        nlp = spacy.blank("uk")
-        print(f'Model {model_name} created\n')
+        nlp = spacy.blank(model_lang)
         
     if "ner" not in nlp.pipe_names:
         ner = nlp.create_pipe("ner")
         nlp.add_pipe(ner, last=True)
     else:
-        ner = nlp.get_pipe("ner")
-        
+        ner = nlp.get_pipe("ner") 
     
-    [[ner.add_label(ent[-1]) for ent in train_data[x]['entities']] for x in train_data]
+    
+    [ner.add_label(x['type']) for x in input_json['data'][0]['entities']]
     
     
     n_iter = 50
     
     pipe_exceptions = ["ner", "trf_wordpiecer", "trf_tok2vec"]
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]    
-    train_data = list(train_data.items())
+    other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
+    train_data = [[input_json['data'][i]['text'], {'entities': [[x['pos'][0], x['pos'][1]+1, x['type']] for x in input_json['data'][i]['entities']]}] for i in range(len(input_json['data']))]
         
 
-    optimizer = nlp.begin_training() if model_name not in os.listdir('.') else nlp.resume_training()
-           
+    optimizer = nlp.begin_training() if f'{model_name}_{model_lang}' not in os.listdir('.') else nlp.resume_training()
+    list_losses = list()  
     with nlp.disable_pipes(*other_pipes):        
 
         for itn in range(n_iter):
@@ -76,12 +63,25 @@ def main():
                     losses=losses,
                     sgd=optimizer
                 )
-            print(f"Iteration number: {itn:4}, loss = {losses['ner']:.10f}")
+            list_losses.append(losses['ner'])
+    
+    nlp.to_disk(f"./{model_name}_{model_lang}")
+    
+    output_json['model']['losses'] = list_losses
+    
+    return output_json
+
+
+
+if __name__=='__main__':
+    
+    input_json = None
+    for line in input_stream:
+        input_json = json.loads(line)    
+        
+        output = main(input_json)
+        
+        output_json = json.dumps(output, ensure_ascii=False).encode('utf-8')
+        sys.stdout.buffer.write(output_json)
         print()
-    
-    nlp.to_disk(f"./{model_name}")
-    print('Model Saved\n')
-    
-    
-if __name__ == '__main__':
-    main()
+        

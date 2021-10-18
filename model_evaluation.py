@@ -1,5 +1,7 @@
 import argparse
 import os
+import io
+import sys
 import json
 import spacy
 from spacy.gold import GoldParse
@@ -7,49 +9,52 @@ from spacy.scorer import Scorer
 
 
 
-def main():
+input_stream = io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8')
 
-    parser = argparse.ArgumentParser(description='A program for evaluation of trainer NER model')
 
-    parser.add_argument("--model_name", help="Specify model name")
-    parser.add_argument("--data_string", help="JSON string with training data")
-    parser.add_argument("--data_json", help="JSON file with training data")
-    
+def main(input_json):
 
-    args = parser.parse_args()    
+    output_json = input_json.copy()
+        
+    model_name = input_json['model']['name']
+    model_lang = input_json['model']['locale']       
     
     
-    if args.data_string and not args.data_json:
-        data = json.loads(args.data_string)        
+    if f'{model_name}_{model_lang}' in os.listdir('.'):
+        nlp = spacy.load(f'./{model_name}_{model_lang}')
     else:
-        with open(args.data_json, 'r', encoding='utf') as f:
-            data = json.loads(f.read())
-
-
-    model_name = args.model_name            
-    if model_name in os.listdir('.'):
-        nlp = spacy.load(f'./{model_name}')
-        print(f'Model {model_name} loaded\n')
-    else:
-        print(f'No such model: {model_name}\n')
         return
         
     if "ner" in nlp.pipe_names:
         ner = nlp.get_pipe("ner")
     else:
-        print(f"Model {model_name} doesn't have NER pipeline\n")
+        return
           
             
-    data = list(data.items())            
+    data = [[input_json['data'][i]['text'], {'entities': [[x['pos'][0], x['pos'][1]+1, x['type']] for x in input_json['data'][i]['entities']]}] for i in range(len(input_json['data']))]
+    
     scorer = Scorer()
     for input_, annot in data:
         doc_gold_text = nlp.make_doc(input_)
         gold = GoldParse(doc_gold_text, entities=annot['entities'])
         pred_value = nlp(input_)
         scorer.score(pred_value, gold)
-
-    print(scorer.scores['ents_per_type'])
+       
+    output_json['model']['metrics'] = scorer.scores['ents_per_type']
+    
+    return output_json
     
     
-if __name__ == '__main__':
-    main()
+    
+if __name__=='__main__':
+    
+    input_json = None
+    for line in input_stream:
+        input_json = json.loads(line)    
+        
+        output = main(input_json)
+        
+        output_json = json.dumps(output, ensure_ascii=False).encode('utf-8')
+        sys.stdout.buffer.write(output_json)
+        print()
+        

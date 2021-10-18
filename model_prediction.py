@@ -1,47 +1,64 @@
-import argparse
 import os
+import io
+import sys
+import json
 import spacy
 
 
 
-def main():
+input_stream = io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8')
 
-    parser = argparse.ArgumentParser(description='A program for prediction NER entities in text using trained model')
 
-    parser.add_argument("--model_name", help="Specify model name")
-    parser.add_argument("--data_string", help="String with data for predicting")
-    parser.add_argument("--data_file", help="File with data for predicting")
+def main(input_json):
 
-    args = parser.parse_args()    
+    output_json = input_json.copy()
     
-    model_name = args.model_name
+    model_name = input_json['model']['name']
+    model_lang = input_json['model']['locale']
     
-    if args.data_string and not args.data_file:
-        data = args.data_string
-    else:
-        with open(args.data_file, 'r', encoding='utf') as f:
-            data = f.read()
                                           
-    if model_name in os.listdir('.'):
-        nlp = spacy.load(f'./{model_name}')
-        print(f'Model {model_name} loaded\n')
+    if f'{model_name}_{model_lang}' in os.listdir('.'):
+        nlp = spacy.load(f'./{model_name}_{model_lang}')
     else:
-        print(f'No such model: {model_name}\n')
         return
         
     if "ner" in nlp.pipe_names:
         ner = nlp.get_pipe("ner")
     else:
-        print(f"Model {model_name} doesn't have NER pipeline\n")
-                        
-    doc = nlp(data)
-    
-    
-    print(f'Input text:\n{data}')
-    print("Tokens", [(t.text, t.ent_type_) for t in doc])
-    print("Entities", [(ent.text, ent.label_) for ent in doc.ents])
+        return
+                
+    for i in range(len(input_json['data'])):
+        text = input_json['data'][i]['text']
+        entities = list()
+        doc = nlp(text)                   
+        
+        start_index = 0
+        for ent in doc.ents:                                    
+            start_pos = text.index(ent.text, start_index)
+            end_pos = text.index(ent.text, start_index)+len(ent.text)-1
+            
+            res_tmp = {}
+            res_tmp['type'] = ent.label_
+            res_tmp['pos'] = [start_pos, end_pos]
+            entities.append(res_tmp)
+            
+            start_index = end_pos
+        
+        output_json['data'][i]['entities'] = entities
+        
 
+    return output_json
+
+
+
+if __name__=='__main__':
     
-    
-if __name__ == '__main__':
-    main()
+    input_json = None
+    for line in input_stream:
+        input_json = json.loads(line)    
+        
+        output = main(input_json)
+        
+        output_json = json.dumps(output, ensure_ascii=False).encode('utf-8')
+        sys.stdout.buffer.write(output_json)
+        print()
