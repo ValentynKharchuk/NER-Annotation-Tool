@@ -1,113 +1,32 @@
 # NER-Annotation-Tool
 NN based tool for data labeling of ukrainian texts for resolving NER task
 
-### Examples of training scripts launch:
+### Example of training scripts launch:
 ```
-python model_training.py --model_name NER_UA --data_string "{\"У Львові розшукали зниклу школярку із Києва\": {\"entities\": [[2, 8, \"LOC\"]]}, \"14-річна мешканка Рудок Віолетта Єрмілова, яка зникла 10 грудня, була оголошена у національний розшук.\": {\"entities\": [[24, 41, \"PERS\"], [18, 23, \"LOC\"]]}}"
-```
-or
-```
-python model_training.py --model_name NER_UA --data_json train_data.json
+python model_training.py 
+{"model": {"name": "noname","locale": "uk"},"data": [{"node": "subSentence","text": "Кабмін затвердив проєкт постанови","entities": [{"type": "ORGANIZATION","pos": [0,5]},{"type": "LOCATION","pos": [17,22]}]},{"text": " Про це повідомила пресслужба Міністерства фінансів України","entities": [{"type": "ORGANIZATION","pos": [30,58],"nestedIn": ["subSentence"]}]}]}
 ```
 
 #### Output should be like:
 ```
-Train sample: 
-	У Львові розшукали зниклу школярку із Києва
-Entities:
-	Львові, type = LOC
-
-Train sample: 
-	14-річна мешканка Рудок Віолетта Єрмілова, яка зникла 10 грудня, була оголошена у національний розшук.
-Entities:
-	Віолетта Єрмілова, type = PERS
-	Рудок, type = LOC
-
-Model NER_UA created
-
-Iteration number:    0, loss = 21.5999972820
-Iteration number:    1, loss = 21.1185176373
-Iteration number:    2, loss = 20.2205410004
-Iteration number:    3, loss = 18.8637704849
-Iteration number:    4, loss = 16.4918403625
-Iteration number:    5, loss = 13.9438774586
-Iteration number:    6, loss = 9.8551077843
-Iteration number:    7, loss = 6.6367459297
-Iteration number:    8, loss = 4.8364996612
-Iteration number:    9, loss = 4.5791020095
-Iteration number:   10, loss = 4.8024854185
-Iteration number:   11, loss = 4.7205195627
-Iteration number:   12, loss = 4.9006442177
-Iteration number:   13, loss = 4.1077750155
-Iteration number:   14, loss = 3.2992876860
-Iteration number:   15, loss = 2.6126790247
-Iteration number:   16, loss = 1.9446569378
-Iteration number:   17, loss = 6.3731961697
-Iteration number:   18, loss = 3.1941776201
-Iteration number:   19, loss = 3.4279961262
-Iteration number:   20, loss = 2.9323397995
-Iteration number:   21, loss = 2.8161391181
-Iteration number:   22, loss = 2.9287119741
-Iteration number:   23, loss = 2.4261903624
-Iteration number:   24, loss = 1.4259722400
-Iteration number:   25, loss = 1.1705083202
-Iteration number:   26, loss = 1.1216225238
-Iteration number:   27, loss = 2.3020652494
-Iteration number:   28, loss = 1.7874184919
-Iteration number:   29, loss = 0.9552937168
-Iteration number:   30, loss = 1.3786115739
-Iteration number:   31, loss = 1.4386676249
-Iteration number:   32, loss = 0.9713124277
-Iteration number:   33, loss = 0.6563476904
-Iteration number:   34, loss = 0.4957005480
-Iteration number:   35, loss = 0.2736193652
-Iteration number:   36, loss = 0.2334939833
-Iteration number:   37, loss = 0.0588329191
-Iteration number:   38, loss = 0.0435542848
-Iteration number:   39, loss = 0.0059659734
-Iteration number:   40, loss = 0.0015818090
-Iteration number:   41, loss = 0.0070119408
-Iteration number:   42, loss = 0.0000748051
-Iteration number:   43, loss = 0.0034642793
-Iteration number:   44, loss = 0.0000357370
-Iteration number:   45, loss = 0.0005713936
-Iteration number:   46, loss = 0.0008861053
-Iteration number:   47, loss = 0.0008187483
-Iteration number:   48, loss = 0.0000530142
-Iteration number:   49, loss = 0.0000006418
-
-Model Saved
+{"model": {"name": "noname", "locale": "uk", "losses": [10.799998462200165, 10.571893095970154, 10.275183200836182, 9.596847832202911, 8.726697146892548, 7.802149474620819, 5.9745200872421265, 4.810515910387039, 4.400107033550739, 4.532589679583907, 4.794591702520847, 5.099115784978494, 4.250343264080584, 3.912178149446845, 3.3282315370161086, 5.589973955415189, 3.1999236876145005, 4.499815300107002, 3.49600762873888, 3.226840253919363, 3.0761756766587496, 2.6321781063452363, 2.1561748906970024, 1.9634855100885034, 1.629924092325382, 1.5041019909767783, 1.1774751855555223, 0.9850692263735255, 0.5902386240977648, 0.5561446660158254, 0.3032168019008168, 0.29182885101195666, 0.0905654267687197, 0.027600084950904602, 0.01498246684775495, 0.010298716465285906, 0.002788229277030041, 0.002901617209509766, 0.0013339000946928081, 1.5402350868498615e-05, 5.0265502654411875e-05, 2.1590413240346606e-05, 2.089464632959448e-05, 1.197992786217128e-05, 9.924468358235572e-07, 1.1887809273636307e-06, 5.186940293722131e-06, 7.894115079398745e-07, 4.203730275535722e-06, 5.303997728800525e-07]}, "data": [{"node": "subSentence", "text": "Кабмін затвердив проєкт постанови", "entities": [{"type": "ORGANIZATION", "pos": [0, 5]}, {"type": "LOCATION", "pos": [17, 22]}]}, {"text": " Про це повідомила пресслужба Міністерства фінансів України", "entities": [{"type": "ORGANIZATION", "pos": [30, 58], "nestedIn": ["subSentence"]}]}]}
 ```
 
-### Examples of prediction scripts launch:
+### Example of prediction scripts launch:
 ```
-python model_prediction.py --model_name NER_UA --data_string "13 жовтня у Львові у Києві"
-```
-or
-```
-python model_prediction.py --model_name NER_UA --data_file test_data.txt
+python model_prediction.py
+{"model": {"name": "noname","locale": "uk"},"data": [{"id": "e74ed2e2-ff00-499f-a760-3c516f657169","node": "subSentence","concept":"SYNTAX","text": "Кабмін затвердив проєкт постанови","entities": []},{"id": "6b26ebfb-9350-4e46-912c-d4237424a822","node": "subSentence","concept": "SYNTAX","text": " яка дозволяє в рамках державних зовнішніх запозичень залучити до 21 млн фунтів стерлінгів від Агентства експортного фінансування Сполученого Королівства ","entities": []}]}
 ```
 #### Output should be like:
 ```
-Model NER_UA loaded
-
-Input text:
-13 жовтня у Львові у Києві
-Tokens [('13', ''), ('жовтня', ''), ('у', ''), ('Львові', 'LOC'), ('у', ''), ('Києві', '')]
-Entities [('Львові', 'LOC')]
+{"model": {"name": "noname", "locale": "uk"}, "data": [{"id": "e74ed2e2-ff00-499f-a760-3c516f657169", "node": "subSentence", "concept": "SYNTAX", "text": "Кабмін затвердив проєкт постанови", "entities": [{"type": "ORGANIZATION", "pos": [0, 5]}, {"type": "LOCATION", "pos": [17, 22]}]}, {"id": "6b26ebfb-9350-4e46-912c-d4237424a822", "node": "subSentence", "concept": "SYNTAX", "text": " яка дозволяє в рамках державних зовнішніх запозичень залучити до 21 млн фунтів стерлінгів від Агентства експортного фінансування Сполученого Королівства ", "entities": [{"type": "ORGANIZATION", "pos": [95, 140]}]}]}
 ```
-### Examples of evaluation scripts launch:
+### Example of evaluation scripts launch:
 ```
-python model_evaluation.py --model_name NER_UA --data_string "{\"У Львові розшукали зниклу школярку із Києва\": {\"entities\": [[2, 8, \"LOC\"]]}, \"14-річна мешканка Рудок Віолетта Єрмілова, яка зникла 10 грудня, була оголошена у національний розшук.\": {\"entities\": [[24, 41, \"PERS\"], [18, 23, \"LOC\"]]}}"
-```
-or
-```
-python model_evaluation.py --model_name NER_UA --data_json train_data.json
+python model_evaluation.py 
+{"model": {"name": "noname","locale": "uk"},"data": [{"node": "subSentence","text": "Кабмін затвердив проєкт постанови","entities": [{"type": "ORGANIZATION","pos": [0,5]},{"type": "LOCATION","pos": [17,22]}]},{"text": " Про це повідомила пресслужба Міністерства фінансів України","entities": [{"type": "ORGANIZATION","pos": [30,58],"nestedIn": ["subSentence"]}]}]}
 ```
 #### Output should be like:
 ```
-Model NER_UA loaded
-
-{'LOC': {'p': 100.0, 'r': 100.0, 'f': 100.0}, 'PERS': {'p': 100.0, 'r': 100.0, 'f': 100.0}}
+{"model": {"name": "noname", "locale": "uk", "metrics": {"ORGANIZATION": {"p": 100.0, "r": 100.0, "f": 100.0}, "LOCATION": {"p": 100.0, "r": 100.0, "f": 100.0}}}, "data": [{"node": "subSentence", "text": "Кабмін затвердив проєкт постанови", "entities": [{"type": "ORGANIZATION", "pos": [0, 5]}, {"type": "LOCATION", "pos": [17, 22]}]}, {"text": " Про це повідомила пресслужба Міністерства фінансів України", "entities": [{"type": "ORGANIZATION", "pos": [30, 58], "nestedIn": ["subSentence"]}]}]}
 ```
-
